@@ -63,6 +63,7 @@ extern int append_mode;
 extern int make_backups;
 extern int csum_length;
 extern int ignore_times;
+extern int time_only;
 extern int size_only;
 extern OFF_T max_size;
 extern OFF_T min_size;
@@ -576,15 +577,17 @@ void itemize(const char *fnamecmp, struct file_struct *file, int ndx, int statre
 /* Perform our quick-check heuristic for determining if a file is unchanged. */
 int unchanged_file(char *fn, struct file_struct *file, STRUCT_STAT *st)
 {
-	if (st->st_size != F_LENGTH(file))
-		return 0;
+	if (time_only <= 0) {
+		if(st->st_size != F_LENGTH(file))
+			return 0;
 
-	/* if always checksum is set then we use the checksum instead
-	   of the file time to determine whether to sync */
-	if (always_checksum > 0 && S_ISREG(st->st_mode)) {
-		char sum[MAX_DIGEST_LEN];
-		file_checksum(fn, st, sum);
-		return memcmp(sum, F_SUM(file), flist_csum_len) == 0;
+		/* if always checksum is set then we use the checksum instead
+		   of the file time to determine whether to sync */
+		if (always_checksum > 0 && S_ISREG(st->st_mode)) {
+			char sum[MAX_DIGEST_LEN];
+			file_checksum(fn, st, sum);
+			return memcmp(sum, F_SUM(file), flist_csum_len) == 0;
+		}
 	}
 
 	if (size_only > 0)
@@ -2116,6 +2119,7 @@ void check_for_finished_files(int itemizing, enum logcode code, int check_redo)
 			ignore_non_existing = -ignore_non_existing;
 			update_only = -update_only;
 			always_checksum = -always_checksum;
+			time_only = -time_only;
 			size_only = -size_only;
 			append_mode = -append_mode;
 			make_backups = -make_backups; /* avoid dup backup w/inplace */
@@ -2141,6 +2145,7 @@ void check_for_finished_files(int itemizing, enum logcode code, int check_redo)
 			ignore_non_existing = -ignore_non_existing;
 			update_only = -update_only;
 			always_checksum = -always_checksum;
+			time_only = -time_only;
 			size_only = -size_only;
 			append_mode = -append_mode;
 			make_backups = -make_backups;

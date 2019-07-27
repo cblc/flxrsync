@@ -1,3 +1,48 @@
+WHAT IS FLXRSYNC?
+-----------------
+
+flxrsync stands for "flexible rsync" and it's rsync-3.1.3 with a new
+option added ("--time-only") that lets you ignore file size when deciding
+if a file needs to be transferred or not.
+
+Of course this option goes against the original rsync goal, which is to 
+sync identical copies of files. Two files cannot be identical if their 
+sizes vary, so it's unlikely that the "--time-only" option would be added 
+to the official rsync.
+
+However, there are some scenarios where the "--time-only" option can be
+of great value. For example, when you are not syncing identical files,
+but files with some processing filter applied. You could argue that a
+different tool should be used instead in such cases, but... the rsync 
+algorithm for locating the files to be transferred, the options for 
+tuning it and for deleting files that were removed from the source 
+directory, together with its well-tested behavior throughout the years, 
+proving to be a reputable and rock-solid tool... all of this makes you 
+want not to look for a different tool.
+
+I added the "--time-only" option because I needed the behavior described
+above, in a very well tested tool.
+
+The modifications to the source are minimal (just take a look at the 
+relevant commit and you'll see how straightforward it is).
+
+I didn't modify the file names for the generated executable and
+manpages, but it's likely you'll want to rename rsync to flxrsync (and
+the same for manpages) in order to also keep the original rsync in your
+system. Anyway, the renaming must be done after the build.
+
+Note that the new "--time-only" option is documented when you execute
+'flxrsync --help' but however it's not documented in the manpages (they
+are just the rsync 3.1.3 original manpages, unmodified).
+
+
+
+What follows is the original README for rsync 3.1.3:
+
+
+
+
+
 WHAT IS RSYNC?
 --------------
 

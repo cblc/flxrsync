@@ -107,6 +107,7 @@ int keep_partial = 0;
 int safe_symlinks = 0;
 int copy_unsafe_links = 0;
 int munge_symlinks = 0;
+int time_only = 0;
 int size_only = 0;
 int daemon_bwlimit = 0;
 int bwlimit = 0;
@@ -639,7 +640,7 @@ static void print_rsync_version(enum logcode f)
 	}
 
 	rprintf(f,"\n");
-	rprintf(f,"rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you\n");
+	rprintf(f,"flxrsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you\n");
 	rprintf(f,"are welcome to redistribute it under certain conditions.  See the GNU\n");
 	rprintf(f,"General Public Licence for details.\n");
 }
@@ -650,19 +651,19 @@ void usage(enum logcode F)
   print_rsync_version(F);
 
   rprintf(F,"\n");
-  rprintf(F,"rsync is a file transfer program capable of efficient remote update\n");
+  rprintf(F,"flxrsync is a file transfer program capable of efficient remote update\n");
   rprintf(F,"via a fast differencing algorithm.\n");
 
   rprintf(F,"\n");
-  rprintf(F,"Usage: rsync [OPTION]... SRC [SRC]... DEST\n");
-  rprintf(F,"  or   rsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST\n");
-  rprintf(F,"  or   rsync [OPTION]... SRC [SRC]... [USER@]HOST::DEST\n");
-  rprintf(F,"  or   rsync [OPTION]... SRC [SRC]... rsync://[USER@]HOST[:PORT]/DEST\n");
-  rprintf(F,"  or   rsync [OPTION]... [USER@]HOST:SRC [DEST]\n");
-  rprintf(F,"  or   rsync [OPTION]... [USER@]HOST::SRC [DEST]\n");
-  rprintf(F,"  or   rsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]\n");
+  rprintf(F,"Usage: flxrsync [OPTION]... SRC [SRC]... DEST\n");
+  rprintf(F,"  or   flxrsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST\n");
+  rprintf(F,"  or   flxrsync [OPTION]... SRC [SRC]... [USER@]HOST::DEST\n");
+  rprintf(F,"  or   flxrsync [OPTION]... SRC [SRC]... rsync://[USER@]HOST[:PORT]/DEST\n");
+  rprintf(F,"  or   flxrsync [OPTION]... [USER@]HOST:SRC [DEST]\n");
+  rprintf(F,"  or   flxrsync [OPTION]... [USER@]HOST::SRC [DEST]\n");
+  rprintf(F,"  or   flxrsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]\n");
   rprintf(F,"The ':' usages connect via remote shell, while '::' & 'rsync://' usages connect\n");
-  rprintf(F,"to an rsync daemon, and require SRC or DEST to start with a module name.\n");
+  rprintf(F,"to an flxrsync daemon, and require SRC or DEST to start with a module name.\n");
   rprintf(F,"\n");
   rprintf(F,"Options\n");
   rprintf(F," -v, --verbose               increase verbosity\n");
@@ -756,6 +757,7 @@ void usage(enum logcode F)
   rprintf(F,"     --contimeout=SECONDS    set daemon connection timeout in seconds\n");
   rprintf(F," -I, --ignore-times          don't skip files that match in size and mod-time\n");
   rprintf(F," -M, --remote-option=OPTION  send OPTION to the remote side only\n");
+  rprintf(F,"     --time-only             ignore the file size when deciding if a file changed or not\n");
   rprintf(F,"     --size-only             skip files that match in size\n");
   rprintf(F," -@, --modify-window=NUM     set the accuracy for mod-time comparisons\n");
   rprintf(F," -T, --temp-dir=DIR          create temporary files in directory DIR\n");
@@ -810,8 +812,8 @@ void usage(enum logcode F)
   rprintf(F,"(-h) --help                  show this help (-h is --help only if used alone)\n");
 
   rprintf(F,"\n");
-  rprintf(F,"Use \"rsync --daemon --help\" to see the daemon-mode command-line options.\n");
-  rprintf(F,"Please see the rsync(1) and rsyncd.conf(5) man pages for full documentation.\n");
+  rprintf(F,"Use \"flxrsync --daemon --help\" to see the daemon-mode command-line options.\n");
+  rprintf(F,"Please see the flxrsync(1) and flxrsyncd.conf(5) man pages for full documentation.\n");
   rprintf(F,"See http://rsync.samba.org/ for updates, bug reports, and answers\n");
 }
 
@@ -911,6 +913,7 @@ static struct poptOption long_options[] = {
   {"no-i-d",           0,  POPT_ARG_VAL,    &implied_dirs, 0, 0, 0 },
   {"chmod",            0,  POPT_ARG_STRING, 0, OPT_CHMOD, 0, 0 },
   {"ignore-times",    'I', POPT_ARG_NONE,   &ignore_times, 0, 0, 0 },
+  {"time-only",        0,  POPT_ARG_NONE,   &time_only, 0, 0, 0 },
   {"size-only",        0,  POPT_ARG_NONE,   &size_only, 0, 0, 0 },
   {"one-file-system", 'x', POPT_ARG_NONE,   0, 'x', 0, 0 },
   {"no-one-file-system",0, POPT_ARG_VAL,    &one_file_system, 0, 0, 0 },
@@ -1433,7 +1436,7 @@ int parse_arguments(int *argc_p, const char ***argv_p)
 				rprintf(FERROR, "Daemon option(s) used without --daemon.\n");
 			    daemon_error:
 				rprintf(FERROR,
-				    "(Type \"rsync --daemon --help\" for assistance with daemon mode.)\n");
+				    "(Type \"flxrsync --daemon --help\" for assistance with daemon mode.)\n");
 				exit_cleanup(RERR_SYNTAX);
 			}
 
@@ -2664,6 +2667,8 @@ void server_options(char **args, int *argc_p)
 			args[ac++] = "--only-write-batch=X";
 		if (am_root > 1)
 			args[ac++] = "--super";
+		if (time_only)
+			args[ac++] = "--time-only";
 		if (size_only)
 			args[ac++] = "--size-only";
 		if (do_stats)
